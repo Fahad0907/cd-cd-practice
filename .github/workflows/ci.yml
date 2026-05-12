@@ -3,25 +3,50 @@ name: Deploy Django App
 on:
   push:
     branches:
-      - main
+      - main # Change to your deployment branch
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the repository
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Deploy to Private EC2
+      # Step 2: Set up SSH for EC2 access
+      - name: Set up SSH
         run: |
-          ssh ubuntu@52.90.3.101 << 'EOF'
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_PRIVATE }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          chmod 700 ~/.ssh
+          ssh-keyscan -H 3.89.71.20 >> ~/.ssh/known_hosts  # EC2 Public IP
+      # Step 3: Set up ssh-agent (optional but recommended for handling private keys)
+      - name: Set up ssh-agent
+        run: |
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_rsa
 
-            cd cd-cd-practice
+      - name: Debug SSH Key
+        run: |
+          ls -lah ~/.ssh
+          file ~/.ssh/id_rsa
+          cat ~/.ssh/id_rsa | head -n 5
 
-            git pull origin main
+      # Step 4: Deploy to EC2 (Pull code, install dependencies, migrate, collectstatic, restart services)
+      - name: Deploy to EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa ubuntu@3.89.71.20 << 'EOF'
+
+            # Navigate to project folder
+            cd /var/www/cd-cd-practice
+
+            # Pull the latest code from the repo
+            git pull origin main  # Change to your deployment branch
 
           EOF
 
+      # Step 5: Notify of successful deployment (Optional)
       - name: Notify Success
         run: echo "Deployment Successful!"
