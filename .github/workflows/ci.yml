@@ -15,9 +15,9 @@ jobs:
 
       - name: Deploy to Private EC2
         run: |
-          ssh ubuntu@10.0.2.14 << 'EOF'
+          ssh ubuntu@52.90.3.101 << 'EOF'
 
-            cd /var/www/cd-cd-practice
+            cd cd-cd-practice
 
             git pull origin main
 
