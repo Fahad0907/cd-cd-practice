@@ -5,6 +5,7 @@ on:
     branches:
       - main
 
+
 jobs:
   # =========================
   # 1. TEST JOB (CI GATE)
@@ -16,16 +17,32 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+      # -------------------------
+      # Check Python or install
+      # -------------------------
+      - name: Check Python installation
+        run: |
+          if command -v python3 &> /dev/null
+          then
+              echo "✅ Python is installed"
+              python3 --version
+          else
+              echo "❌ Python not found. Installing..."
+              sudo apt update
+              sudo apt install python3 python3-pip -y
+          fi
 
+      # -------------------------
+      # Install dependencies
+      # -------------------------
       - name: Install Dependencies
         run: |
-          python -m pip install --upgrade pip
+          python3 -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # -------------------------
+      # Run tests
+      # -------------------------
       - name: Run Pytest
         run: |
           pytest -x --disable-warnings --maxfail=1
@@ -35,7 +52,7 @@ jobs:
   # 2. DEPLOY JOB
   # =========================
   deploy:
-    needs: test   # 👈 IMPORTANT: only runs if tests pass
+    needs: test   # 👈 runs ONLY if tests pass
     runs-on: self-hosted
 
     steps:
@@ -43,11 +60,20 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@52.90.3.101 << 'EOF'
 
+            set -e
+
             cd cd-cd-practice
 
             git pull origin main
 
+            # Optional (if using docker)
+            # docker compose up -d --build
+
+            # Optional (if Django server)
+            # sudo systemctl restart gunicorn
+            # sudo systemctl restart nginx
+
           EOF
 
       - name: Notify Success
-        run: echo "Deployment Successful!"
+        run: echo "🚀 Deployment Successful!"
