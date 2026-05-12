@@ -21,7 +21,7 @@ jobs:
           echo "${{ secrets.EC2_PRIVATE }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           chmod 700 ~/.ssh
-          ssh-keyscan -H 3.89.71.20 >> ~/.ssh/known_hosts  # EC2 Public IP
+          ssh-keyscan -H 10.0.2.14 >> ~/.ssh/known_hosts  # EC2 Public IP
       # Step 3: Set up ssh-agent (optional but recommended for handling private keys)
       - name: Set up ssh-agent
         run: |
@@ -37,7 +37,7 @@ jobs:
       # Step 4: Deploy to EC2 (Pull code, install dependencies, migrate, collectstatic, restart services)
       - name: Deploy to EC2
         run: |
-          ssh -i ~/.ssh/id_rsa ubuntu@3.89.71.20 << 'EOF'
+          ssh -i ~/.ssh/id_rsa ubuntu@10.0.2.14 << 'EOF'
 
             # Navigate to project folder
             cd /var/www/cd-cd-practice
